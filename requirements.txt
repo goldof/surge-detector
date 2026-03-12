@@ -1,0 +1,10 @@
+# Short-Term Surge Detector Dependencies
+# 短线暴涨探测器 - Python 依赖
+
+# 核心依赖
+akshare>=1.12.0
+pandas>=1.5.0
+numpy>=1.21.0
+
+# 可选依赖
+# python-dateutil>=2.8.2

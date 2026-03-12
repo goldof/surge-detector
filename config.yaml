@@ -1,0 +1,146 @@
+# OpenClaw Skill Configuration
+# 短线暴涨探测器 v2.0
+
+skill:
+  name: "short_term_surge_detector"
+  display_name: "短线暴涨探测器"
+  version: "2.0.0"
+  description: "任意股票短线暴涨分析，目标 10-20 天 25%+ 收益"
+  author: "OpenClaw Community"
+  language: "zh-CN"
+
+triggers:
+  # 关键词触发
+  keywords:
+    - "分析"
+    - "短线"
+    - "暴涨"
+    - "涨停"
+    - "25%"
+    - "持仓监控"
+    - "失效检测"
+  
+  # 正则表达式触发
+  patterns:
+    - "\\d{6}"                    # 6 位股票代码
+    - "[\\u4e00-\\u9fa5]+ 怎么样"  # XX 怎么样
+    - "[\\u4e00-\\u9fa5]+ 能涨吗"  # XX 能涨吗
+
+data_sources:
+  primary:
+    name: "akshare"
+    description: "A 股数据源"
+    endpoints:
+      - stock_zh_a_hist           # K 线数据
+      - stock_zh_a_spot_em        # 实时行情
+      - stock_individual_fund_flow # 资金流向
+      - stock_lhb_detail_daily_sina # 龙虎榜
+      - stock_notice_report       # 公司公告
+    rate_limit:
+      requests_per_minute: 60
+      timeout_seconds: 30
+  
+  backup:
+    name: "yahoo_finance"
+    description: "备用数据源 (港股/美股)"
+    tickers_format:
+      sz: "{code}.SZ"
+      sh: "{code}.SS"
+
+analysis_pipeline:
+  # 分析步骤配置
+  steps:
+    - name: "identify"
+      description: "股票识别"
+      required: true
+    
+    - name: "fetch"
+      description: "数据获取 (并行)"
+      parallel: true
+    
+    - name: "catalyst"
+      description: "催化剂扫描"
+      weight: 0.30
+    
+    - name: "capital"
+      description: "资金异动检测"
+      weight: 0.25
+    
+    - name: "sector"
+      description: "板块热力"
+      weight: 0.20
+    
+    - name: "technical"
+      description: "技术形态"
+      weight: 0.15
+    
+    - name: "fundamental"
+      description: "基本面过滤"
+      weight: 0.10
+    
+    - name: "failure_detection"
+      description: "失效模式检测"
+      required_for_holding: true
+    
+    - name: "score"
+      description: "加权评分"
+    
+    - name: "plan"
+      description: "生成交易计划"
+    
+    - name: "alert"
+      description: "风险预警"
+
+# 权重配置
+weights:
+  catalyst: 0.30
+  capital: 0.25
+  sector: 0.20
+  technical: 0.15
+  fundamental: 0.10
+
+# 风控参数
+risk_guardrails:
+  max_loss_per_trade: 0.08      # 单票最大亏损 8%
+  time_stop_days: 5             # 时间止损天数
+  profit_protect_ratio: 0.6     # 利润回撤 60% 保护
+  volume_collapse_ratio: 0.5    # 量能萎缩 50% 警戒
+
+# 失效检测配置
+failure_detection:
+  catalyst_denial:
+    keywords: "澄清 | 否认 | 不实 | 谣言 | 未收到 | 未签署 | 不存在 | 未计划 | 终止 | 取消"
+  capital_withdrawal:
+    outflow_days: 3             # 连续流出天数
+    outflow_ratio: 0.15         # 累计流出比例
+  technical_breakdown:
+    stop_loss: 0.08             # 止损比例
+    support_buffer: 0.03        # 支撑缓冲
+
+output_formats:
+  - type: "markdown_report"
+    enabled: true
+    template: "OPENCLAW_PROMPT"
+  
+  - type: "json_data"
+    enabled: true
+  
+  - type: "trading_plan_csv"
+    enabled: false
+
+performance:
+  timeout_seconds: 30
+  cache_ttl_seconds: 300        # 5 分钟缓存
+  max_concurrent_requests: 5
+
+special_rules:
+  st_stock_score_cap: 60        # ST 股评分上限
+  star_market_stop_loss: 0.10   # 科创板/创业板止损
+  market_index_threshold: 0.03  # 大盘环境阈值
+
+# 禁止事项
+restrictions:
+  - "不提供必涨承诺"
+  - "不预测具体涨停时间"
+  - "单票仓位不超过 50%"
+  - "必须设置止损"
