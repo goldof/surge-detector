@@ -47,8 +47,8 @@ def sync_to_bitable(result, stock_name=''):
             '分析时价格': result['current_price'],
             '目标价': result['target_price'],
             '止损价': result['stop_loss'],
-            '分析报告': f"5D:{result.get('ret_5d', 'N/A')}% VolRatio:{result.get('vol_ratio', 'N/A')}x",
-            '20 天后复盘': f'待复盘（{review_date.strftime("%Y-%m-%d")}）',
+            '入选理由': f"5D:{result.get('ret_5d', 'N/A')}% 量比:{result.get('vol_ratio', 'N/A')}x 评分:{result['total_score']:.1f}",
+            '20 天后复盘': '',
             '复盘日期': int(review_date.timestamp() * 1000)
         }
     }
