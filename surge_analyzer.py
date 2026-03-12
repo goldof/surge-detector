@@ -15,8 +15,14 @@ import os
 # Set UTF-8 encoding
 sys.stdout.reconfigure(encoding='utf-8')
 
-# Tushare Token (from user config)
-TUSHARE_TOKEN = 'a3be644afcfa0ad3082047f4e6725f1077acf9c85578f0646103e4ff'
+# Tushare Token (load from environment variable or config file)
+# Set environment variable: TUSHARE_TOKEN=your_token_here
+# Or create config.py with: TUSHARE_TOKEN = 'your_token_here'
+import os
+try:
+    from config import TUSHARE_TOKEN
+except ImportError:
+    TUSHARE_TOKEN = os.getenv('TUSHARE_TOKEN', '')
 
 class DataFetcher:
     """Dual data source fetcher: AKShare primary, Tushare fallback"""
