@@ -135,7 +135,7 @@ class ShortTermSurgeDetector:
 
                 # 中度催化剂
                 medium_patterns = r'(回购 | 增持 | 产能扩张 | 投产 | 政策利好)'
-                elif re.search(medium_patterns, title):
+                if re.search(medium_patterns, title):
                     score += 10
                     evidence.append(f"📈 {title[:40]}...")
 
